@@ -1,0 +1,64 @@
+namespace org.example.biznet
+
+abstract participant Account identified by accountID {
+	o String accountID
+	o Double balance
+	o String name
+  o Address address 
+} 
+
+participant Client extends Account {
+  --> Shipment[] sentShipments
+  --> Shipment[] incomingShipments
+}
+
+participant TransportCompany extends Account {
+  --> Shipment[] carryingShipments
+}
+
+/*
+Relationships are unidirectional and deletes do not cascade, ie. removing the relationship has no impact on the thing that is being pointed to. Removing the thing being pointed to does not invalidate the relationship.
+
+Relationships must be resolved to retrieve an instance of the object being referenced. The act of resolution may result in null, if the object no longer exists or the information in the relationship is invalid.
+*/
+
+asset Shipment identified by shipmentId {
+  o String shipmentId
+  --> Client sender // first sender of shipment  
+  --> Client recipient // final recipient of the shipment
+  --> Account currentHolder // current shipment holder
+  
+  o ShipmentState shipmentState
+
+  o Double value // total value of shipment
+  o String description  
+  --> TransportCompany[] listOfCompanies optional  
+}
+
+transaction CreateShipment {
+  --> Client sender
+  --> Client recipient
+
+  o Double value
+  o String description
+}
+
+transaction TransferShipment {
+  --> Account from
+  --> Account to
+  --> Shipment shipment
+}
+
+concept Address {
+  o String street
+  o String city 
+  o String zipcode
+  o String country    
+}
+
+enum ShipmentState {
+  o NEW
+  o DELIVERED
+  o ON_ROAD
+  // TODO: Add DAMAGED
+}
